@@ -7,10 +7,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unzip project
         run: |
-          unzip RelojSideralWidget.zip
+          unzip -o RelojSideralWidget.zip
           rm RelojSideralWidget.zip
-          mv *Widget*/*. 2>/dev/null || true
-          mv RelojSideralWidget/*. 2>/dev/null || true
+          if [! -f gradlew ]; then
+            for d in */; do
+              if [ -f "$d/gradlew" ]; then
+                cp -r $d/*. 2>/dev/null || true
+                cp -r $d/.*. 2>/dev/null || true
+                break
+              fi
+            done
+          fi
           ls -la
       - uses: actions/setup-java@v4
         with:
@@ -24,5 +31,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: RelojSideral-Claudia-APK
+          name: RelojSideral-APK
           path: app/build/outputs/apk/debug/*.apk
