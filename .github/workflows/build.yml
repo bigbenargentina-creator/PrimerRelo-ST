@@ -1,35 +1,41 @@
-name: Build APK Claudia
-on: [push]
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
+
+      - name: Preparar proyecto
         run: |
-          unzip -o RelojSideralWidget.zip
-          rm RelojSideralWidget.zip
-          if [! -f gradlew ]; then
-            for d in */; do
-              if [ -f "$d/gradlew" ]; then
-                cp -r $d/*. 2>/dev/null || true
-                cp -r $d/.*. 2>/dev/null || true
-                break
-              fi
-            done
+          if [ -f RelojSideralWidget.zip ]; then
+            unzip -o RelojSideralWidget.zip
+            rm -f RelojSideralWidget.zip
+          fi
+          if [ -d RelojSideralWidget ]; then
+            cp -a RelojSideralWidget/. .
+            rm -rf RelojSideralWidget
           fi
           ls -la
-      - uses: actions/setup-java@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v3
-      - name: Build APK
-        run: |
-          chmod +x gradlew
-         ./gradlew assembleDebug
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build
+        run: gradle assembleDebug --no-daemon
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RelojSideral-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
